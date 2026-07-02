@@ -1,1 +1,63 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tabu Pro Online</title>
+  <link rel="stylesheet" href="style.css">
+</head>
 
+<body>
+  <main class="app">
+
+    <header class="header">
+      <h1>🎲 Tabu Pro Online</h1>
+      <p>Online-Tabu mit Team Rot und Team Blau</p>
+    </header>
+
+    <section id="start" class="box">
+      <button id="createGame">🎮 Spiel erstellen</button>
+
+      <input id="joinCode" type="text" placeholder="Spielcode eingeben">
+
+      <button id="joinGame">🤝 Spiel beitreten</button>
+    </section>
+
+    <section id="game" class="box hidden">
+      <h2>Spielcode: <span id="gameCode">------</span></h2>
+
+      <section class="teams">
+        <div class="team red">
+          <h3>🔴 Team Rot</h3>
+          <div id="redScore" class="score">0</div>
+          <button id="redPoint">+ Rot</button>
+        </div>
+
+        <div class="team blue">
+          <h3>🔵 Team Blau</h3>
+          <div id="blueScore" class="score">0</div>
+          <button id="bluePoint">+ Blau</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div id="category" class="category">Kategorie</div>
+
+        <h1 id="word">Begriff</h1>
+
+        <h3>🚫 Nicht sagen</h3>
+
+        <div id="taboo1" class="taboo">–</div>
+        <div id="taboo2" class="taboo">–</div>
+        <div id="taboo3" class="taboo">–</div>
+      </section>
+
+      <button id="newCard">🎲 Neue Karte</button>
+      <button id="resetScores">🗑 Punkte zurücksetzen</button>
+    </section>
+
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
