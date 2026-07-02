@@ -1,0 +1,71 @@
+body{
+  font-family:Arial,sans-serif;
+  background:#f4f4f4;
+  margin:0;
+  padding:20px;
+}
+
+.app{
+  max-width:700px;
+  margin:auto;
+}
+
+header{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.box,.card{
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  margin-bottom:20px;
+  box-shadow:0 2px 8px rgba(0,0,0,.1);
+}
+
+button{
+  padding:10px 16px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  margin:5px;
+}
+
+.team{
+  display:inline-block;
+  width:45%;
+  text-align:center;
+}
+
+.red{
+  color:#d32f2f;
+}
+
+.blue{
+  color:#1976d2;
+}
+
+.score{
+  font-size:40px;
+  font-weight:bold;
+  margin:10px 0;
+}
+
+.category{
+  color:#666;
+  font-size:18px;
+}
+
+#word{
+  font-size:32px;
+  margin:20px 0;
+}
+
+.taboo{
+  font-size:22px;
+  margin:8px 0;
+}
+
+.hidden{
+  display:none;
+}
