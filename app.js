@@ -8,15 +8,15 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyChTETGFMkLEBnkFG30K5s66k3uxvl_gLc",
-  authDomain: "tabu-pro-online.firebaseapp.com",
-  projectId: "tabu-pro-online",
-  storageBucket: "tabu-pro-online.firebasestorage.app",
-  messagingSenderId: "912894114247",
-  appId: "1:912894114247:web:723dd7817505ab9d89c1e2"
-};
 
+const firebaseConfig = {
+  apiKey: "AIzaSyCLmKBM8OoqcLAVZhIHvuF0_e0trsu8-5Q",
+  authDomain: "tabu-pro-online-7cf64.firebaseapp.com",
+  projectId: "tabu-pro-online-7cf64",
+  storageBucket: "tabu-pro-online-7cf64.firebasestorage.app",
+  messagingSenderId: "498221308101",
+  appId: "1:498221308101:web:fa6b8efea669a6d10db8ac"
+};
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
