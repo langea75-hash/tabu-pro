@@ -2569,3 +2569,4 @@ export const cards = [
     word: "Aktenschrank",
     taboo: ["Ordner", "Unterlagen", "Schrank"]
   },
+];
