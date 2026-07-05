@@ -1920,7 +1920,6 @@ export const cards = [
     taboo: ["Ostsee", "Hafen", "Mecklenburg"]
   },
   {
-    {
     category: "Städte",
     word: "Potsdam",
     taboo: ["Brandenburg", "Schloss", "Berlin"]
