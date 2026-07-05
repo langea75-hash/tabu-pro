@@ -137,4 +137,32 @@ document.getElementById("endExplain").onclick = () => {
     alert("Runde beendet!");
 };
 }
+const waitingArea = document.getElementById("waitingArea");
+const cardArea = document.getElementById("cardArea");
+const statusText = document.getElementById("statusText");
+const beExplainerButton = document.getElementById("beExplainer");
+currentCard: cards[0],
+explainer: ""
+beExplainerButton.onclick = async () => {
+    await updateDoc(gameRef, {
+        explainer: nameInput.value || "Spieler"
+    });
+};
 
+document.getElementById("endExplain").onclick = async () => {
+    await updateDoc(gameRef, {
+        explainer: ""
+    });
+};
+if (d.explainer === "") {
+    waitingArea.classList.remove("hidden");
+    cardArea.classList.add("hidden");
+    statusText.innerText = "Niemand erklärt gerade.";
+} else if (d.explainer === nameInput.value) {
+    waitingArea.classList.add("hidden");
+    cardArea.classList.remove("hidden");
+} else {
+    waitingArea.classList.remove("hidden");
+    cardArea.classList.add("hidden");
+    statusText.innerText = d.explainer + " erklärt gerade.";
+}
