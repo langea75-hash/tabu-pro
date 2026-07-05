@@ -98,8 +98,7 @@ export const cards = [
     category: "Alltag",
     word: "Rucksack",
     taboo: ["tragen", "Schule", "Gepäck"]
-  }
-];
+  },
   {
     category: "Alltag",
     word: "Fahrrad",
@@ -549,7 +548,7 @@ export const cards = [
     category: "Essen & Trinken",
     word: "Mineralwasser",
     taboo: ["Flasche", "Sprudel", "trinken"]
-  }
+  },
   {
     category: "Tiere",
     word: "Hund",
