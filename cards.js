@@ -1,52 +1,102 @@
-export const cards = [
+[
   {
-    category: "Natur",
-    word: "Sonnenblume",
-    taboo: ["gelb", "Blume", "Garten"]
+    "category": "Alltag",
+    "word": "Zahnbürste",
+    "taboo": ["Zähne", "putzen", "Bad"]
   },
   {
-    category: "Tiere",
-    word: "Hund",
-    taboo: ["Katze", "bellen", "Leine"]
+    "category": "Alltag",
+    "word": "Regenschirm",
+    "taboo": ["Regen", "trocken", "Schirm"]
   },
   {
-    category: "Essen",
-    word: "Pizza",
-    taboo: ["Käse", "Tomate", "Italien"]
+    "category": "Alltag",
+    "word": "Wecker",
+    "taboo": ["aufstehen", "Uhr", "Alarm"]
   },
   {
-    category: "Verkehr",
-    word: "Auto",
-    taboo: ["Motor", "Reifen", "Lenkrad"]
+    "category": "Alltag",
+    "word": "Kühlschrank",
+    "taboo": ["kalt", "Essen", "Gefrierfach"]
   },
   {
-    category: "Sport",
-    word: "Fußball",
-    taboo: ["Ball", "Tor", "Spieler"]
+    "category": "Alltag",
+    "word": "Waschmaschine",
+    "taboo": ["Wäsche", "schleudern", "Waschmittel"]
   },
   {
-    category: "Berufe",
-    word: "Arzt",
-    taboo: ["Patient", "Krankenhaus", "Praxis"]
+    "category": "Alltag",
+    "word": "Staubsauger",
+    "taboo": ["Staub", "saugen", "Boden"]
   },
   {
-    category: "Alltag",
-    word: "Telefon",
-    taboo: ["Anruf", "Handy", "Nummer"]
+    "category": "Alltag",
+    "word": "Fernbedienung",
+    "taboo": ["Fernseher", "Knopf", "Programm"]
   },
   {
-    category: "Reisen",
-    word: "Hotel",
-    taboo: ["Zimmer", "Urlaub", "Rezeption"]
+    "category": "Alltag",
+    "word": "Schlüssel",
+    "taboo": ["Tür", "Schloss", "öffnen"]
   },
   {
-    category: "Musik",
-    word: "Gitarre",
-    taboo: ["Saiten", "Instrument", "Musik"]
+    "category": "Alltag",
+    "word": "Brille",
+    "taboo": ["sehen", "Augen", "Gläser"]
   },
   {
-    category: "Filme",
-    word: "Popcorn",
-    taboo: ["Kino", "Mais", "Snack"]
+    "category": "Alltag",
+    "word": "Sofa",
+    "taboo": ["Wohnzimmer", "sitzen", "Couch"]
+  },
+  {
+    "category": "Alltag",
+    "word": "Kissen",
+    "taboo": ["schlafen", "Bett", "weich"]
+  },
+  {
+    "category": "Alltag",
+    "word": "Decke",
+    "taboo": ["warm", "Bett", "zudecken"]
+  },
+  {
+    "category": "Alltag",
+    "word": "Spiegel",
+    "taboo": ["sehen", "Glas", "Gesicht"]
+  },
+  {
+    "category": "Alltag",
+    "word": "Mülleimer",
+    "taboo": ["Abfall", "Müll", "Tonne"]
+  },
+  {
+    "category": "Alltag",
+    "word": "Toilettenpapier",
+    "taboo": ["Toilette", "Rolle", "Bad"]
+  },
+  {
+    "category": "Alltag",
+    "word": "Handtuch",
+    "taboo": ["abtrocknen", "Bad", "Dusche"]
+  },
+  {
+    "category": "Alltag",
+    "word": "Seife",
+    "taboo": ["waschen", "Hände", "Schaum"]
+  },
+  {
+    "category": "Alltag",
+    "word": "Kamm",
+    "taboo": ["Haare", "frisieren", "Bürste"]
+  },
+  {
+    "category": "Alltag",
+    "word": "Taschenlampe",
+    "taboo": ["Licht", "Batterie", "dunkel"]
+  },
+  {
+    "category": "Alltag",
+    "word": "Rucksack",
+    "taboo": ["tragen", "Schule", "Gepäck"]
   }
-];
+]
