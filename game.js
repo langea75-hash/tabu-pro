@@ -136,4 +136,5 @@ document.getElementById("skip").onclick = async () => {
 document.getElementById("endExplain").onclick = () => {
     alert("Runde beendet!");
 };
+}
 
