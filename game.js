@@ -99,6 +99,7 @@ function showCard(card) {
   taboo2.innerText = card.taboo[1];
   taboo3.innerText = card.taboo[2];
 }
+
 async function createGame() {
   const category = startCategory.value;
 
@@ -124,9 +125,9 @@ async function createGame() {
     deck: deck,
     deckPosition: 0,
     cardIndex: deck[0],
-    explainerId: "",
-    explainerName: "",
-    explainerTeam: ""
+    explainerId: playerId,
+    explainerName: getName(),
+    explainerTeam: teamSelect.value
   });
 
   gameCategory.value = category;
@@ -185,18 +186,19 @@ function listenGame() {
       return;
     }
 
-    showWaiting(`${data.explainerName} erklärt gerade.`, false);
+    showWaiting(data.explainerName + " erklärt gerade.", false);
   });
 }
+
 async function nextCard() {
   const snap = await getDoc(gameRef);
   const data = snap.data();
 
-  let deck = data.deck;
+  let deck = [...data.deck];
   let position = data.deckPosition + 1;
 
   if (position >= deck.length) {
-    deck = makeDeck(data.category);
+    deck = makeDeck(data.category || "Alle");
     position = 0;
   }
 
@@ -227,15 +229,18 @@ async function correct() {
   const snap = await getDoc(gameRef);
   const data = snap.data();
 
-  if (data.explainerId !== playerId) return;
+  if (data.explainerId !== playerId) {
+    alert("Nur der Erklärer darf Punkte geben.");
+    return;
+  }
 
   if (data.explainerTeam === "red") {
     await updateDoc(gameRef, {
-      red: data.red + 1
+      red: (data.red ?? 0) + 1
     });
   } else {
     await updateDoc(gameRef, {
-      blue: data.blue + 1
+      blue: (data.blue ?? 0) + 1
     });
   }
 
@@ -246,7 +251,10 @@ async function skip() {
   const snap = await getDoc(gameRef);
   const data = snap.data();
 
-  if (data.explainerId !== playerId) return;
+  if (data.explainerId !== playerId) {
+    alert("Nur der Erklärer darf Karten überspringen.");
+    return;
+  }
 
   await nextCard();
 }
@@ -255,7 +263,10 @@ async function endExplain() {
   const snap = await getDoc(gameRef);
   const data = snap.data();
 
-  if (data.explainerId !== playerId) return;
+  if (data.explainerId !== playerId) {
+    alert("Nur der Erklärer darf beenden.");
+    return;
+  }
 
   await updateDoc(gameRef, {
     explainerId: "",
@@ -268,6 +279,11 @@ async function changeCategory() {
   const category = gameCategory.value;
 
   const deck = makeDeck(category);
+
+  if (deck.length === 0) {
+    alert("Keine Karten in dieser Kategorie gefunden.");
+    return;
+  }
 
   await updateDoc(gameRef, {
     category: category,
