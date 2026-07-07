@@ -9,199 +9,108 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-// --------------------------------------------------
-// Variablen
-// --------------------------------------------------
-
 let gameCode = "";
 let gameRef = null;
 let unsubscribe = null;
 
-let currentDeck = [];
-let currentIndex = 0;
-
-// eindeutige Geräte-ID
 let playerId = localStorage.getItem("tabuPlayerId");
-
 if (!playerId) {
   playerId = crypto.randomUUID();
   localStorage.setItem("tabuPlayerId", playerId);
 }
 
-// --------------------------------------------------
-// Buttons
-// --------------------------------------------------
+const startScreen = document.getElementById("startScreen");
+const gameScreen = document.getElementById("gameScreen");
 
-const createButton = document.getElementById("createGame");
-const joinButton = document.getElementById("joinGame");
+const playerName = document.getElementById("playerName");
+const teamSelect = document.getElementById("teamSelect");
+const startCategory = document.getElementById("startCategory");
+const joinCode = document.getElementById("joinCode");
 
-const correctButton = document.getElementById("correct");
-const skipButton = document.getElementById("skip");
-const endButton = document.getElementById("endExplain");
+const createGameBtn = document.getElementById("createGame");
+const joinGameBtn = document.getElementById("joinGame");
 
-const changeCategoryButton =
-  document.getElementById("changeCategory");
+const gameCodeText = document.getElementById("gameCode");
+const redScore = document.getElementById("redScore");
+const blueScore = document.getElementById("blueScore");
 
-const beExplainerButton =
-  document.getElementById("beExplainer");
+const gameCategory = document.getElementById("gameCategory");
+const changeCategoryBtn = document.getElementById("changeCategory");
 
-// --------------------------------------------------
-// Eingaben
-// --------------------------------------------------
+const waitingArea = document.getElementById("waitingArea");
+const cardArea = document.getElementById("cardArea");
+const statusText = document.getElementById("statusText");
 
-const playerNameInput =
-  document.getElementById("playerName");
+const beExplainerBtn = document.getElementById("beExplainer");
+const correctBtn = document.getElementById("correct");
+const skipBtn = document.getElementById("skip");
+const endBtn = document.getElementById("endExplain");
 
-const teamInput =
-  document.getElementById("team");
+const categoryText = document.getElementById("categoryText");
+const wordText = document.getElementById("wordText");
+const taboo1 = document.getElementById("taboo1");
+const taboo2 = document.getElementById("taboo2");
+const taboo3 = document.getElementById("taboo3");
 
-const joinCodeInput =
-  document.getElementById("joinCode");
-
-const categorySelect =
-  document.getElementById("categorySelect");
-
-// --------------------------------------------------
-// Anzeigen
-// --------------------------------------------------
-
-const startScreen =
-  document.getElementById("start");
-
-const gameScreen =
-  document.getElementById("game");
-
-const waitingArea =
-  document.getElementById("waitingArea");
-
-const cardArea =
-  document.getElementById("cardArea");
-
-const statusText =
-  document.getElementById("statusText");
-
-const gameCodeLabel =
-  document.getElementById("gameCode");
-
-const redScore =
-  document.getElementById("redScore");
-
-const blueScore =
-  document.getElementById("blueScore");
-
-const category =
-  document.getElementById("category");
-
-const word =
-  document.getElementById("word");
-
-const taboo1 =
-  document.getElementById("taboo1");
-
-const taboo2 =
-  document.getElementById("taboo2");
-
-const taboo3 =
-  document.getElementById("taboo3");
-
-console.log("Tabu Online 2.0 gestartet");
-function getPlayerName() {
-  return playerNameInput.value.trim() || "Spieler";
+function getName() {
+  return playerName.value.trim() || "Spieler";
 }
 
-function getPlayerTeam() {
-  return teamInput.value;
+function getCardsByCategory(category) {
+  if (category === "Alle") return cards;
+  return cards.filter(card => card.category === category);
 }
 
-function getSelectedCategory() {
-  return categorySelect.value;
-}
+function makeDeck(category) {
+  const available = [];
 
-function getCardsForCategory(selectedCategory) {
-  if (selectedCategory === "Alle") {
-    return cards;
-  }
+  cards.forEach((card, index) => {
+    if (category === "Alle" || card.category === category) {
+      available.push(index);
+    }
+  });
 
-  return cards.filter(card => card.category === selectedCategory);
-}
-
-function shuffleArray(array) {
-  const copy = [...array];
-
-  for (let i = copy.length - 1; i > 0; i--) {
+  for (let i = available.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    const temp = copy[i];
-    copy[i] = copy[j];
-    copy[j] = temp;
+    [available[i], available[j]] = [available[j], available[i]];
   }
 
-  return copy;
+  return available;
 }
 
-function createDeck(selectedCategory) {
-  const filteredCards = getCardsForCategory(selectedCategory);
-
-  if (filteredCards.length === 0) {
-    return [];
-  }
-
-  return shuffleArray(filteredCards);
-}
-
-function showGameScreen() {
+function openGame() {
   startScreen.classList.add("hidden");
   gameScreen.classList.remove("hidden");
-  gameCodeLabel.innerText = gameCode;
+  gameCodeText.innerText = gameCode;
 }
 
-function showStartScreen() {
-  startScreen.classList.remove("hidden");
-  gameScreen.classList.add("hidden");
-}
-
-function clearCard() {
-  category.innerText = "";
-  word.innerText = "";
-  taboo1.innerText = "";
-  taboo2.innerText = "";
-  taboo3.innerText = "";
-}
-
-function showWaiting(text, showButton) {
+function showWaiting(text, buttonVisible) {
   waitingArea.classList.remove("hidden");
   cardArea.classList.add("hidden");
-
   statusText.innerText = text;
-
-  if (showButton) {
-    beExplainerButton.classList.remove("hidden");
-  } else {
-    beExplainerButton.classList.add("hidden");
-  }
-
-  clearCard();
+  beExplainerBtn.style.display = buttonVisible ? "block" : "none";
 }
 
 function showCard(card) {
   waitingArea.classList.add("hidden");
   cardArea.classList.remove("hidden");
 
-  category.innerText = card.category;
-  word.innerText = card.word;
+  categoryText.innerText = card.category;
+  wordText.innerText = card.word;
   taboo1.innerText = card.taboo[0];
   taboo2.innerText = card.taboo[1];
   taboo3.innerText = card.taboo[2];
 }
 
 async function createGame() {
-  const selectedCategory = getSelectedCategory();
+  const category = startCategory.value;
 
-  if (!selectedCategory) {
+  if (!category) {
     alert("Bitte zuerst eine Kategorie auswählen.");
     return;
   }
 
-  const deck = createDeck(selectedCategory);
+  const deck = makeDeck(category);
 
   if (deck.length === 0) {
     alert("Keine Karten in dieser Kategorie gefunden.");
@@ -214,22 +123,22 @@ async function createGame() {
   await setDoc(gameRef, {
     red: 0,
     blue: 0,
-    category: selectedCategory,
+    category: category,
     deck: deck,
-    deckIndex: 0,
-    currentCard: deck[0],
+    deckPosition: 0,
+    cardIndex: deck[0],
     explainerId: "",
     explainerName: "",
-    explainerTeam: "",
-    createdAt: Date.now()
+    explainerTeam: ""
   });
 
-  showGameScreen();
+  gameCategory.value = category;
+  openGame();
   listenGame();
 }
 
 async function joinGame() {
-  gameCode = joinCodeInput.value.trim();
+  gameCode = joinCode.value.trim();
 
   if (!gameCode) {
     alert("Bitte Spielcode eingeben.");
@@ -237,7 +146,6 @@ async function joinGame() {
   }
 
   gameRef = doc(db, "games", gameCode);
-
   const snap = await getDoc(gameRef);
 
   if (!snap.exists()) {
@@ -246,88 +154,152 @@ async function joinGame() {
   }
 
   const data = snap.data();
+  gameCategory.value = data.category || "Alle";
 
-  if (data.category) {
-    categorySelect.value = data.category;
-  }
-
-  showGameScreen();
+  openGame();
   listenGame();
 }
+
 function listenGame() {
+  if (unsubscribe) unsubscribe();
 
-  if (unsubscribe) {
-    unsubscribe();
-  }
-
-  unsubscribe = onSnapshot(gameRef, (snap) => {
-
-    if (!snap.exists()) {
-      alert("Spiel existiert nicht mehr.");
-      showStartScreen();
-      return;
-    }
+  unsubscribe = onSnapshot(gameRef, snap => {
+    if (!snap.exists()) return;
 
     const data = snap.data();
 
     redScore.innerText = data.red ?? 0;
     blueScore.innerText = data.blue ?? 0;
+    gameCategory.value = data.category || "Alle";
 
-    // Niemand erklärt
     if (!data.explainerId) {
-
-      showWaiting(
-        "Niemand erklärt gerade.",
-        true
-      );
-
+      showWaiting("Niemand erklärt gerade.", true);
       return;
     }
 
-    // Nur der Erklärer darf die Karte sehen
     if (data.explainerId === playerId) {
-
-      showCard(data.currentCard);
-
-    } else {
-
-      waitingArea.classList.remove("hidden");
-      cardArea.classList.add("hidden");
-
-      statusText.innerText =
-        data.explainerName + " erklärt gerade.";
-
+      const card = cards[data.cardIndex];
+      showCard(card);
+      return;
     }
 
+    showWaiting(`${data.explainerName} erklärt gerade.`, false);
   });
-
 }
-async function becomeExplainer() {
 
+async function nextCard() {
   const snap = await getDoc(gameRef);
-
   const data = snap.data();
 
-  if (data.explainerId) {
+  let deck = data.deck || [];
+  let position = (data.deckPosition ?? 0) + 1;
 
-    alert(data.explainerName + " erklärt bereits.");
-
-    return;
-
+  if (position >= deck.length) {
+    deck = makeDeck(data.category || "Alle");
+    position = 0;
   }
 
   await updateDoc(gameRef, {
-
-    explainerId: playerId,
-
-    explainerName: getPlayerName(),
-
-    explainerTeam: getPlayerTeam()
-
+    deck: deck,
+    deckPosition: position,
+    cardIndex: deck[position]
   });
-
 }
-createButton.onclick = createGame;
-joinButton.onclick = joinGame;
 
-beExplainerButton.onclick = becomeExplainer;
+async function becomeExplainer() {
+  const snap = await getDoc(gameRef);
+  const data = snap.data();
+
+  if (data.explainerId) {
+    alert(`${data.explainerName} erklärt bereits.`);
+    return;
+  }
+
+  await updateDoc(gameRef, {
+    explainerId: playerId,
+    explainerName: getName(),
+    explainerTeam: teamSelect.value
+  });
+}
+
+async function correct() {
+  const snap = await getDoc(gameRef);
+  const data = snap.data();
+
+  if (data.explainerId !== playerId) {
+    alert("Nur der Erklärer darf Punkte geben.");
+    return;
+  }
+
+  if (data.explainerTeam === "red") {
+    await updateDoc(gameRef, { red: (data.red ?? 0) + 1 });
+  } else {
+    await updateDoc(gameRef, { blue: (data.blue ?? 0) + 1 });
+  }
+
+  await nextCard();
+}
+
+async function skip() {
+  const snap = await getDoc(gameRef);
+  const data = snap.data();
+
+  if (data.explainerId !== playerId) {
+    alert("Nur der Erklärer darf Karten überspringen.");
+    return;
+  }
+
+  await nextCard();
+}
+
+async function endExplain() {
+  const snap = await getDoc(gameRef);
+  const data = snap.data();
+
+  if (data.explainerId !== playerId) {
+    alert("Nur der Erklärer darf beenden.");
+    return;
+  }
+
+  await updateDoc(gameRef, {
+    explainerId: "",
+    explainerName: "",
+    explainerTeam: ""
+  });
+}
+
+async function changeCategory() {
+  const category = gameCategory.value;
+
+  if (!category) {
+    alert("Bitte Kategorie auswählen.");
+    return;
+  }
+
+  const deck = makeDeck(category);
+
+  if (deck.length === 0) {
+    alert("Keine Karten in dieser Kategorie gefunden.");
+    return;
+  }
+
+  await updateDoc(gameRef, {
+    category: category,
+    deck: deck,
+    deckPosition: 0,
+    cardIndex: deck[0],
+    explainerId: "",
+    explainerName: "",
+    explainerTeam: ""
+  });
+}
+
+createGameBtn.onclick = createGame;
+joinGameBtn.onclick = joinGame;
+beExplainerBtn.onclick = becomeExplainer;
+correctBtn.onclick = correct;
+skipBtn.onclick = skip;
+endBtn.onclick = endExplain;
+changeCategoryBtn.onclick = changeCategory;
+
+console.log("Tabu Online 2.0 gestartet");
