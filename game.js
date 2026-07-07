@@ -42,38 +42,79 @@ const correctButton = document.getElementById("correct");
 const skipButton = document.getElementById("skip");
 const endButton = document.getElementById("endExplain");
 
-console.log("🎲 Tabu Online gestartet");
-
-function playerName() {
+function getPlayerName() {
   return nameInput.value.trim() || "Spieler";
 }
 
-function randomCard() {
+function getRandomCard() {
   return cards[Math.floor(Math.random() * cards.length)];
 }
 
-function openGameScreen() {
+function showStart() {
+  startScreen.classList.remove("hidden");
+  gameScreen.classList.add("hidden");
+}
+
+function showGame() {
   startScreen.classList.add("hidden");
   gameScreen.classList.remove("hidden");
   gameCodeLabel.innerText = gameCode;
 }
 
-createButton.onclick = async () => {
+function showWaiting(text, showButton = true) {
+  waitingArea.classList.remove("hidden");
+  cardArea.classList.add("hidden");
+
+  statusText.innerText = text;
+
+  if (showButton) {
+    beExplainerButton.classList.remove("hidden");
+  } else {
+    beExplainerButton.classList.add("hidden");
+  }
+
+  clearCard();
+}
+
+function showCard(card) {
+  waitingArea.classList.add("hidden");
+  cardArea.classList.remove("hidden");
+
+  category.innerText = card.category;
+  word.innerText = card.word;
+  taboo1.innerText = card.taboo[0];
+  taboo2.innerText = card.taboo[1];
+  taboo3.innerText = card.taboo[2];
+}
+
+function clearCard() {
+  category.innerText = "";
+  word.innerText = "";
+  taboo1.innerText = "";
+  taboo2.innerText = "";
+  taboo3.innerText = "";
+}
+
+async function createGame() {
+  const name = getPlayerName();
+
   gameCode = Math.floor(100000 + Math.random() * 900000).toString();
   gameRef = doc(db, "games", gameCode);
 
   await setDoc(gameRef, {
     red: 0,
     blue: 0,
-    currentCard: randomCard(),
-    explainer: ""
+    currentCard: getRandomCard(),
+    explainer: "",
+    explainerTeam: "",
+    createdAt: Date.now()
   });
 
-  openGameScreen();
+  showGame();
   listenGame();
-};
+}
 
-joinButton.onclick = async () => {
+async function joinGame() {
   gameCode = joinCodeInput.value.trim();
 
   if (!gameCode) {
@@ -82,6 +123,7 @@ joinButton.onclick = async () => {
   }
 
   gameRef = doc(db, "games", gameCode);
+
   const snap = await getDoc(gameRef);
 
   if (!snap.exists()) {
@@ -89,9 +131,9 @@ joinButton.onclick = async () => {
     return;
   }
 
-  openGameScreen();
+  showGame();
   listenGame();
-};
+}
 
 function listenGame() {
   if (unsubscribe) {
@@ -101,74 +143,104 @@ function listenGame() {
   unsubscribe = onSnapshot(gameRef, (snap) => {
     if (!snap.exists()) {
       alert("Spiel wurde nicht gefunden.");
+      showStart();
       return;
     }
 
-    const d = snap.data();
+    const data = snap.data();
+    const currentPlayer = getPlayerName();
 
-    redScore.innerText = d.red ?? 0;
-    blueScore.innerText = d.blue ?? 0;
+    redScore.innerText = data.red ?? 0;
+    blueScore.innerText = data.blue ?? 0;
 
-    if (d.currentCard) {
-      category.innerText = d.currentCard.category;
-      word.innerText = d.currentCard.word;
-      taboo1.innerText = d.currentCard.taboo[0];
-      taboo2.innerText = d.currentCard.taboo[1];
-      taboo3.innerText = d.currentCard.taboo[2];
-    }
-
-    if (!d.explainer) {
-      waitingArea.classList.remove("hidden");
-      cardArea.classList.add("hidden");
-      statusText.innerText = "Niemand erklärt gerade.";
-      beExplainerButton.classList.remove("hidden");
+    if (!data.explainer) {
+      showWaiting("Niemand erklärt gerade.", true);
       return;
     }
 
-    if (d.explainer === playerName()) {
-      waitingArea.classList.add("hidden");
-      cardArea.classList.remove("hidden");
+    if (data.explainer === currentPlayer) {
+      showCard(data.currentCard);
       return;
     }
 
-    waitingArea.classList.remove("hidden");
-    cardArea.classList.add("hidden");
-    statusText.innerText = d.explainer + " erklärt gerade.";
-    beExplainerButton.classList.add("hidden");
+    showWaiting(`${data.explainer} erklärt gerade.`, false);
   });
 }
 
-beExplainerButton.onclick = async () => {
-  await updateDoc(gameRef, {
-    explainer: playerName()
-  });
-};
-
-correctButton.onclick = async () => {
+async function becomeExplainer() {
   const snap = await getDoc(gameRef);
-  const d = snap.data();
+  const data = snap.data();
 
-  if (teamInput.value === "red") {
+  if (data.explainer) {
+    alert(`${data.explainer} erklärt bereits.`);
+    return;
+  }
+
+  await updateDoc(gameRef, {
+    explainer: getPlayerName(),
+    explainerTeam: teamInput.value,
+    currentCard: getRandomCard()
+  });
+}
+
+async function correctAnswer() {
+  const snap = await getDoc(gameRef);
+  const data = snap.data();
+
+  if (data.explainer !== getPlayerName()) {
+    alert("Nur der Erklärer darf Punkte geben.");
+    return;
+  }
+
+  const team = data.explainerTeam || teamInput.value;
+
+  if (team === "red") {
     await updateDoc(gameRef, {
-      red: (d.red ?? 0) + 1,
-      currentCard: randomCard()
+      red: (data.red ?? 0) + 1,
+      currentCard: getRandomCard()
     });
   } else {
     await updateDoc(gameRef, {
-      blue: (d.blue ?? 0) + 1,
-      currentCard: randomCard()
+      blue: (data.blue ?? 0) + 1,
+      currentCard: getRandomCard()
     });
   }
-};
+}
 
-skipButton.onclick = async () => {
-  await updateDoc(gameRef, {
-    currentCard: randomCard()
-  });
-};
+async function skipCard() {
+  const snap = await getDoc(gameRef);
+  const data = snap.data();
 
-endButton.onclick = async () => {
+  if (data.explainer !== getPlayerName()) {
+    alert("Nur der Erklärer darf die Karte wechseln.");
+    return;
+  }
+
   await updateDoc(gameRef, {
-    explainer: ""
+    currentCard: getRandomCard()
   });
-};
+}
+
+async function endExplanation() {
+  const snap = await getDoc(gameRef);
+  const data = snap.data();
+
+  if (data.explainer !== getPlayerName()) {
+    alert("Nur der Erklärer darf die Erklärung beenden.");
+    return;
+  }
+
+  await updateDoc(gameRef, {
+    explainer: "",
+    explainerTeam: ""
+  });
+}
+
+createButton.onclick = createGame;
+joinButton.onclick = joinGame;
+beExplainerButton.onclick = becomeExplainer;
+correctButton.onclick = correctAnswer;
+skipButton.onclick = skipCard;
+endButton.onclick = endExplanation;
+
+console.log("Tabu Online gestartet");
