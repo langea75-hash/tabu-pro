@@ -1,44 +1,59 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎲 Tabu Online 💬💬</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tabu Online</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
   <main class="app">
-
     <header class="header">
       <h1>🎲 Tabu Online 💬💬</h1>
       <p>Gemeinsam online spielen</p>
     </header>
 
-    <section id="start" class="box">
+    <section id="startScreen" class="box">
       <h2>Spiel starten</h2>
 
-      <input id="playerName" type="text" placeholder="Dein Name">
+      <input id="playerName" type="text" placeholder="Dein Name" />
 
-      <select id="team">
+      <select id="teamSelect">
         <option value="red">🔴 Team Rot</option>
         <option value="blue">🔵 Team Blau</option>
       </select>
 
+      <select id="startCategory">
+        <option value="">Kategorie wählen</option>
+        <option value="Alle">🎲 Alle Kategorien</option>
+        <option value="Alltag">🏠 Alltag</option>
+        <option value="Essen & Trinken">🍔 Essen & Trinken</option>
+        <option value="Tiere">🐶 Tiere</option>
+        <option value="Natur">🌳 Natur</option>
+        <option value="Sport">⚽ Sport</option>
+        <option value="Verkehr">🚗 Verkehr</option>
+        <option value="Technik">💻 Technik</option>
+        <option value="Berufe">👨‍⚕️ Berufe</option>
+        <option value="Städte">🌍 Städte</option>
+        <option value="Schule & Wissen">📚 Schule & Wissen</option>
+        <option value="Backen">🍞 Backen</option>
+        <option value="Einkaufen">🛒 Einkaufen</option>
+        <option value="Büro">🏢 Büro</option>
+      </select>
+
       <button id="createGame">🎮 Spiel erstellen</button>
 
-      <hr>
+      <hr />
 
-      <input id="joinCode" type="text" placeholder="Spielcode eingeben">
-
+      <input id="joinCode" type="text" placeholder="Spielcode eingeben" />
       <button id="joinGame">🤝 Spiel beitreten</button>
     </section>
 
-    <section id="game" class="box hidden">
-
+    <section id="gameScreen" class="box hidden">
       <h2>Spielcode: <span id="gameCode">------</span></h2>
 
-      <section class="teams">
+      <div class="scoreboard">
         <div class="team red">
           <h3>🔴 Team Rot</h3>
           <div id="redScore" class="score">0</div>
@@ -48,13 +63,10 @@
           <h3>🔵 Team Blau</h3>
           <div id="blueScore" class="score">0</div>
         </div>
-      </section>
+      </div>
 
-      <section class="box">
-        <h3>📂 Kategorie</h3>
-
-        <select id="categorySelect">
-          <option value="">Kategorie wählen</option>
+      <div class="categoryBox">
+        <select id="gameCategory">
           <option value="Alle">🎲 Alle Kategorien</option>
           <option value="Alltag">🏠 Alltag</option>
           <option value="Essen & Trinken">🍔 Essen & Trinken</option>
@@ -71,8 +83,8 @@
           <option value="Büro">🏢 Büro</option>
         </select>
 
-        <button id="changeCategory">📂 Kategorie übernehmen</button>
-      </section>
+        <button id="changeCategory">📂 Kategorie wechseln</button>
+      </div>
 
       <section id="waitingArea" class="card">
         <h2 id="statusText">Niemand erklärt gerade.</h2>
@@ -80,23 +92,19 @@
       </section>
 
       <section id="cardArea" class="card hidden">
-        <div id="category" class="category">Kategorie</div>
-
-        <h1 id="word">Begriff</h1>
+        <p id="categoryText" class="category">Kategorie</p>
+        <h1 id="wordText">Begriff</h1>
 
         <h3>🚫 Nicht sagen</h3>
-
-        <div id="taboo1" class="taboo">-</div>
-        <div id="taboo2" class="taboo">-</div>
-        <div id="taboo3" class="taboo">-</div>
+        <p id="taboo1"></p>
+        <p id="taboo2"></p>
+        <p id="taboo3"></p>
 
         <button id="correct">✅ Richtig</button>
-        <button id="skip">⏭️ Weiter</button>
+        <button id="skip">⏭ Weiter</button>
         <button id="endExplain">🏁 Erklärung beenden</button>
       </section>
-
     </section>
-
   </main>
 
   <script type="module" src="game.js"></script>
