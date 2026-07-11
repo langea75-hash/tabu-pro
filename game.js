@@ -1,307 +1,354 @@
 import { db } from "./firebase.js";
 import { cards } from "./cards.js";
-
 import {
   doc,
-  setDoc,
   getDoc,
-  updateDoc,
-  onSnapshot
+  onSnapshot,
+  runTransaction,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+import {
+  cleanPlayerName,
+  findPlayer,
+  getPlayerId,
+  nextPlayerIndex
+} from "./players.js";
+
+import {
+  advanceCard,
+  advanceCategory,
+  getCategories,
+  getCurrentCardIndex,
+  getCurrentCategory,
+  makeAllDecks,
+  shuffle
+} from "./deck.js";
+
+const playerId = getPlayerId();
 
 let gameCode = "";
 let gameRef = null;
 let unsubscribe = null;
-
-let playerId = localStorage.getItem("tabuPlayerId");
-if (!playerId) {
-  playerId = crypto.randomUUID();
-  localStorage.setItem("tabuPlayerId", playerId);
-}
+let latestGame = null;
 
 const $ = (id) => document.getElementById(id);
 
 const startScreen = $("startScreen");
 const gameScreen = $("gameScreen");
-
-const playerName = $("playerName");
+const playerNameInput = $("playerName");
 const teamSelect = $("teamSelect");
-const startCategory = $("startCategory");
-const joinCode = $("joinCode");
-
-const createGameBtn = $("createGame");
-const joinGameBtn = $("joinGame");
+const joinCodeInput = $("joinCode");
+const createButton = $("createGame");
+const joinButton = $("joinGame");
+const startMessage = $("startMessage");
 
 const gameCodeText = $("gameCode");
+const roundNumber = $("roundNumber");
 const redScore = $("redScore");
 const blueScore = $("blueScore");
-
-const gameCategory = $("gameCategory");
-const changeCategoryBtn = $("changeCategory");
-
-const waitingArea = $("waitingArea");
-const cardArea = $("cardArea");
+const playersList = $("playersList");
+const explainerName = $("explainerName");
+const categoryName = $("categoryName");
 const statusText = $("statusText");
-
-const beExplainerBtn = $("beExplainer");
-const correctBtn = $("correct");
-const skipBtn = $("skip");
-const endBtn = $("endExplain");
-
-const categoryText = $("categoryText");
+const cardArea = $("cardArea");
+const cardCategory = $("cardCategory");
 const wordText = $("wordText");
 const taboo1 = $("taboo1");
 const taboo2 = $("taboo2");
 const taboo3 = $("taboo3");
+const correctButton = $("correct");
+const skipButton = $("skip");
+const endRoundButton = $("endRound");
+const gameMessage = $("gameMessage");
 
-function getName() {
-  return playerName.value.trim() || "Spieler";
+function setBusy(button, busy) {
+  button.disabled = busy;
 }
 
-function makeDeck(category) {
-  const deck = [];
-
-  cards.forEach((card, index) => {
-    if (category === "Alle" || card.category === category) {
-      deck.push(index);
-    }
-  });
-
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
-
-  return deck;
+function showMessage(element, text) {
+  element.textContent = text;
 }
 
-function showGameScreen() {
+function openGame() {
   startScreen.classList.add("hidden");
   gameScreen.classList.remove("hidden");
-  gameCodeText.innerText = gameCode;
+  gameCodeText.textContent = gameCode;
 }
 
-function showWaiting(text, showButton) {
-  waitingArea.classList.remove("hidden");
+function renderPlayers(game) {
+  playersList.replaceChildren();
+
+  game.players.forEach((player, index) => {
+    const row = document.createElement("div");
+    row.className = "playerRow";
+    if (index === game.currentPlayerIndex) row.classList.add("active");
+
+    const name = document.createElement("span");
+    name.textContent = player.name;
+
+    const team = document.createElement("span");
+    team.className = "playerTeam";
+    team.textContent = player.team === "red" ? "🔴 Rot" : "🔵 Blau";
+
+    row.append(name, team);
+    playersList.append(row);
+  });
+}
+
+function hidePrivateCard() {
   cardArea.classList.add("hidden");
-
-  statusText.innerText = text;
-  beExplainerBtn.style.display = showButton ? "block" : "none";
+  cardCategory.textContent = "";
+  wordText.textContent = "";
+  taboo1.textContent = "";
+  taboo2.textContent = "";
+  taboo3.textContent = "";
 }
 
-function showCard(card) {
-  waitingArea.classList.add("hidden");
-  cardArea.classList.remove("hidden");
+function renderGame(game) {
+  latestGame = game;
 
-  categoryText.innerText = card.category;
-  wordText.innerText = card.word;
-  taboo1.innerText = card.taboo[0];
-  taboo2.innerText = card.taboo[1];
-  taboo3.innerText = card.taboo[2];
+  const players = Array.isArray(game.players) ? game.players : [];
+  const currentPlayer = players[Number(game.currentPlayerIndex ?? 0)];
+  const category = getCurrentCategory(game);
+  const me = findPlayer(players, playerId);
+  const amExplainer = Boolean(me && currentPlayer?.id === playerId);
+  const enoughPlayers = players.length >= 2;
+
+  redScore.textContent = String(game.red ?? 0);
+  blueScore.textContent = String(game.blue ?? 0);
+  roundNumber.textContent = String(game.round ?? 1);
+  explainerName.textContent = currentPlayer?.name ?? "Warte auf Spieler …";
+  categoryName.textContent = category || "–";
+
+  renderPlayers({ ...game, players });
+
+  if (!enoughPlayers) {
+    statusText.textContent = "Mindestens zwei Spieler müssen beitreten.";
+    hidePrivateCard();
+    return;
+  }
+
+  if (amExplainer) {
+    const cardIndex = getCurrentCardIndex(game);
+    const card = cards[cardIndex];
+
+    if (!card) {
+      statusText.textContent = "Für diese Kategorie wurde keine Karte gefunden.";
+      hidePrivateCard();
+      return;
+    }
+
+    statusText.textContent = "Du erklärst. Nur du siehst die Karte.";
+    cardArea.classList.remove("hidden");
+    cardCategory.textContent = card.category;
+    wordText.textContent = card.word;
+    taboo1.textContent = card.taboo?.[0] ?? "–";
+    taboo2.textContent = card.taboo?.[1] ?? "–";
+    taboo3.textContent = card.taboo?.[2] ?? "–";
+  } else {
+    statusText.textContent = "Ratet den Begriff. Die Karte bleibt geheim.";
+    hidePrivateCard();
+  }
+}
+
+function listenToGame() {
+  unsubscribe?.();
+
+  unsubscribe = onSnapshot(
+    gameRef,
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        showMessage(gameMessage, "Dieses Spiel existiert nicht mehr.");
+        return;
+      }
+
+      renderGame(snapshot.data());
+    },
+    (error) => {
+      console.error(error);
+      showMessage(gameMessage, "Verbindung zur Datenbank unterbrochen.");
+    }
+  );
 }
 
 async function createGame() {
-  const category = startCategory.value;
+  const name = cleanPlayerName(playerNameInput.value);
 
-  if (!category) {
-    alert("Bitte zuerst eine Kategorie auswählen.");
+  if (!name) {
+    showMessage(startMessage, "Bitte deinen Namen eingeben.");
     return;
   }
 
-  const deck = makeDeck(category);
+  const categories = getCategories(cards);
 
-  if (deck.length === 0) {
-    alert("Keine Karten in dieser Kategorie gefunden.");
+  if (categories.length === 0) {
+    showMessage(startMessage, "Keine Kartenkategorien gefunden.");
     return;
   }
 
-  gameCode = Math.floor(100000 + Math.random() * 900000).toString();
-  gameRef = doc(db, "games", gameCode);
+  setBusy(createButton, true);
+  showMessage(startMessage, "");
 
-  await setDoc(gameRef, {
-    red: 0,
-    blue: 0,
-    category: category,
-    deck: deck,
-    deckPosition: 0,
-    cardIndex: deck[0],
-    explainerId: playerId,
-    explainerName: getName(),
-    explainerTeam: teamSelect.value
-  });
+  try {
+    gameCode = String(Math.floor(100000 + Math.random() * 900000));
+    gameRef = doc(db, "games", gameCode);
 
-  gameCategory.value = category;
-  showGameScreen();
-  listenGame();
+    const categoryOrder = shuffle(categories);
+
+    await setDoc(gameRef, {
+      red: 0,
+      blue: 0,
+      round: 1,
+      players: [{ id: playerId, name, team: teamSelect.value }],
+      currentPlayerIndex: 0,
+      categoryOrder,
+      categoryPosition: 0,
+      decks: makeAllDecks(cards, categories),
+      createdAt: Date.now()
+    });
+
+    openGame();
+    listenToGame();
+  } catch (error) {
+    console.error(error);
+    showMessage(startMessage, "Spiel konnte nicht erstellt werden.");
+  } finally {
+    setBusy(createButton, false);
+  }
 }
 
 async function joinGame() {
-  gameCode = joinCode.value.trim();
+  const name = cleanPlayerName(playerNameInput.value);
+  const code = joinCodeInput.value.trim();
 
-  if (!gameCode) {
-    alert("Bitte Spielcode eingeben.");
+  if (!name) {
+    showMessage(startMessage, "Bitte deinen Namen eingeben.");
     return;
   }
 
-  gameRef = doc(db, "games", gameCode);
-  const snap = await getDoc(gameRef);
-
-  if (!snap.exists()) {
-    alert("Spiel nicht gefunden.");
+  if (!/^\d{6}$/.test(code)) {
+    showMessage(startMessage, "Bitte einen gültigen 6-stelligen Spielcode eingeben.");
     return;
   }
 
-  const data = snap.data();
-  gameCategory.value = data.category || "Alle";
+  setBusy(joinButton, true);
+  showMessage(startMessage, "");
 
-  showGameScreen();
-  listenGame();
-}
+  try {
+    gameCode = code;
+    gameRef = doc(db, "games", gameCode);
 
-function listenGame() {
-  if (unsubscribe) {
-    unsubscribe();
-  }
+    await runTransaction(db, async (transaction) => {
+      const snapshot = await transaction.get(gameRef);
 
-  unsubscribe = onSnapshot(gameRef, (snap) => {
-    if (!snap.exists()) {
-      alert("Spiel wurde nicht gefunden.");
-      return;
-    }
+      if (!snapshot.exists()) throw new Error("NOT_FOUND");
 
-    const data = snap.data();
+      const game = snapshot.data();
+      const players = Array.isArray(game.players) ? [...game.players] : [];
+      const existingIndex = players.findIndex((player) => player.id === playerId);
 
-    redScore.innerText = data.red ?? 0;
-    blueScore.innerText = data.blue ?? 0;
-    gameCategory.value = data.category || "Alle";
+      if (existingIndex === -1 && players.length >= 4) {
+        throw new Error("FULL");
+      }
 
-    if (!data.explainerId) {
-      showWaiting("Niemand erklärt gerade.", true);
-      return;
-    }
+      if (existingIndex === -1) {
+        players.push({ id: playerId, name, team: teamSelect.value });
+      } else {
+        players[existingIndex] = { ...players[existingIndex], name, team: teamSelect.value };
+      }
 
-    if (data.explainerId === playerId) {
-      const card = cards[data.cardIndex];
-      showCard(card);
-      return;
-    }
-
-    showWaiting(data.explainerName + " erklärt gerade.", false);
-  });
-}
-
-async function nextCard() {
-  const snap = await getDoc(gameRef);
-  const data = snap.data();
-
-  let deck = [...data.deck];
-  let position = data.deckPosition + 1;
-
-  if (position >= deck.length) {
-    deck = makeDeck(data.category || "Alle");
-    position = 0;
-  }
-
-  await updateDoc(gameRef, {
-    deck: deck,
-    deckPosition: position,
-    cardIndex: deck[position]
-  });
-}
-
-async function becomeExplainer() {
-  const snap = await getDoc(gameRef);
-  const data = snap.data();
-
-  if (data.explainerId) {
-    alert(data.explainerName + " erklärt bereits.");
-    return;
-  }
-
-  await updateDoc(gameRef, {
-    explainerId: playerId,
-    explainerName: getName(),
-    explainerTeam: teamSelect.value
-  });
-}
-
-async function correct() {
-  const snap = await getDoc(gameRef);
-  const data = snap.data();
-
-  if (data.explainerId !== playerId) {
-    alert("Nur der Erklärer darf Punkte geben.");
-    return;
-  }
-
-  if (data.explainerTeam === "red") {
-    await updateDoc(gameRef, {
-      red: (data.red ?? 0) + 1
+      transaction.update(gameRef, { players });
     });
-  } else {
-    await updateDoc(gameRef, {
-      blue: (data.blue ?? 0) + 1
+
+    openGame();
+    listenToGame();
+  } catch (error) {
+    console.error(error);
+
+    if (error.message === "NOT_FOUND") {
+      showMessage(startMessage, "Spiel nicht gefunden.");
+    } else if (error.message === "FULL") {
+      showMessage(startMessage, "Das Spiel ist bereits voll (maximal 4 Spieler).");
+    } else {
+      showMessage(startMessage, "Beitritt fehlgeschlagen.");
+    }
+  } finally {
+    setBusy(joinButton, false);
+  }
+}
+
+async function updateAsExplainer(action) {
+  if (!gameRef) return;
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const snapshot = await transaction.get(gameRef);
+      if (!snapshot.exists()) throw new Error("NOT_FOUND");
+
+      const game = snapshot.data();
+      const players = Array.isArray(game.players) ? game.players : [];
+      const currentPlayer = players[Number(game.currentPlayerIndex ?? 0)];
+
+      if (!currentPlayer || currentPlayer.id !== playerId) {
+        throw new Error("NOT_EXPLAINER");
+      }
+
+      const update = action(game, currentPlayer);
+      transaction.update(gameRef, update);
     });
-  }
 
-  await nextCard();
+    showMessage(gameMessage, "");
+  } catch (error) {
+    console.error(error);
+
+    if (error.message === "NOT_EXPLAINER") {
+      showMessage(gameMessage, "Nur der aktuelle Erklärer darf das tun.");
+    } else {
+      showMessage(gameMessage, "Aktion konnte nicht gespeichert werden.");
+    }
+  }
 }
 
-async function skip() {
-  const snap = await getDoc(gameRef);
-  const data = snap.data();
+async function markCorrect() {
+  await updateAsExplainer((game, currentPlayer) => {
+    const update = {
+      decks: advanceCard(game, cards)
+    };
 
-  if (data.explainerId !== playerId) {
-    alert("Nur der Erklärer darf Karten überspringen.");
-    return;
-  }
+    if (currentPlayer.team === "red") {
+      update.red = Number(game.red ?? 0) + 1;
+    } else {
+      update.blue = Number(game.blue ?? 0) + 1;
+    }
 
-  await nextCard();
-}
-
-async function endExplain() {
-  const snap = await getDoc(gameRef);
-  const data = snap.data();
-
-  if (data.explainerId !== playerId) {
-    alert("Nur der Erklärer darf beenden.");
-    return;
-  }
-
-  await updateDoc(gameRef, {
-    explainerId: "",
-    explainerName: "",
-    explainerTeam: ""
+    return update;
   });
 }
 
-async function changeCategory() {
-  const category = gameCategory.value;
+async function skipCard() {
+  await updateAsExplainer((game) => ({
+    decks: advanceCard(game, cards)
+  }));
+}
 
-  const deck = makeDeck(category);
+async function endRound() {
+  await updateAsExplainer((game) => {
+    const players = Array.isArray(game.players) ? game.players : [];
+    const categoryUpdate = advanceCategory(game);
 
-  if (deck.length === 0) {
-    alert("Keine Karten in dieser Kategorie gefunden.");
-    return;
-  }
-
-  await updateDoc(gameRef, {
-    category: category,
-    deck: deck,
-    deckPosition: 0,
-    cardIndex: deck[0],
-    explainerId: "",
-    explainerName: "",
-    explainerTeam: ""
+    return {
+      currentPlayerIndex: nextPlayerIndex(players, game.currentPlayerIndex),
+      round: Number(game.round ?? 1) + 1,
+      ...categoryUpdate
+    };
   });
 }
 
-createGameBtn.onclick = createGame;
-joinGameBtn.onclick = joinGame;
-beExplainerBtn.onclick = becomeExplainer;
-correctBtn.onclick = correct;
-skipBtn.onclick = skip;
-endBtn.onclick = endExplain;
-changeCategoryBtn.onclick = changeCategory;
+createButton.addEventListener("click", createGame);
+joinButton.addEventListener("click", joinGame);
+correctButton.addEventListener("click", markCorrect);
+skipButton.addEventListener("click", skipCard);
+endRoundButton.addEventListener("click", endRound);
 
-console.log("✅ Tabu Online 2.0 gestartet");
+console.log("✅ Tabu Online 2.1 gestartet");

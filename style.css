@@ -1,95 +1,265 @@
-body{
-    margin:0;
-    font-family:Arial,sans-serif;
-    background:#f3f3f3;
+* {
+  box-sizing: border-box;
 }
 
-.app{
-    max-width:900px;
-    margin:auto;
-    padding:20px;
+:root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #172033;
+  background: #eef3f8;
 }
 
-.header{
-    text-align:center;
-    margin-bottom:20px;
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #eaf3ff 0, #f7f9fc 45%, #eef3f8 100%);
 }
 
-.box{
-    background:white;
-    border-radius:15px;
-    padding:20px;
-    margin-bottom:20px;
-    box-shadow:0 2px 10px rgba(0,0,0,.15);
+button,
+input,
+select {
+  font: inherit;
 }
 
-.hidden{
-    display:none;
+.app {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  padding: 20px;
 }
 
-input,select,button{
-    width:100%;
-    padding:12px;
-    margin:8px 0;
-    font-size:16px;
-    border-radius:8px;
-    box-sizing:border-box;
+.header {
+  text-align: center;
+  margin: 12px 0 22px;
 }
 
-button{
-    cursor:pointer;
+.header h1 {
+  margin: 0;
+  color: #1457a6;
+  font-size: clamp(2rem, 7vw, 3.2rem);
 }
 
-.scoreboard{
-    display:flex;
-    justify-content:space-around;
-    text-align:center;
-    margin:20px 0;
+.header p {
+  margin: 6px 0 0;
+  color: #526079;
 }
 
-.card{
-    background:#fafafa;
-    border-radius:12px;
-    padding:20px;
-    border:2px solid #ddd;
+.panel,
+.teamCard {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 12px 34px rgba(33, 66, 105, 0.12);
 }
 
-.word{
-    font-size:42px;
-    font-weight:bold;
-    margin:15px 0;
+label,
+.label {
+  display: block;
+  margin: 12px 0 5px;
+  color: #5b6780;
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
-.taboo{
-    color:#d60000;
-    font-size:22px;
-    line-height:1.7;
+input,
+select,
+button {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 12px;
 }
 
-.buttons{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-top:20px;
+input,
+select {
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
 }
 
-.buttons button{
-    flex:1;
+button {
+  margin-top: 10px;
+  padding: 11px 14px;
+  border: 0;
+  background: #2369bd;
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
 }
 
-@media(max-width:700px){
-
-.scoreboard{
-flex-direction:column;
-gap:15px;
+button:hover {
+  filter: brightness(0.95);
 }
 
-.word{
-font-size:32px;
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
-.buttons{
-flex-direction:column;
+.primary {
+  background: #1261b5;
 }
 
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 4px;
+  color: #718096;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: #d8e0ea;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.gameHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.gameHeader strong {
+  font-size: 1.45rem;
+  color: #173d72;
+}
+
+.scoreboard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.teamCard {
+  text-align: center;
+}
+
+.teamCard h2 {
+  font-size: 1.05rem;
+}
+
+.redTeam {
+  background: #fff0f1;
+}
+
+.blueTeam {
+  background: #edf6ff;
+}
+
+.score {
+  font-size: 3rem;
+  font-weight: 900;
+}
+
+.playersList {
+  display: grid;
+  gap: 8px;
+}
+
+.playerRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f3f6fa;
+}
+
+.playerRow.active {
+  outline: 3px solid #f2ba3b;
+}
+
+.playerTeam {
+  font-weight: 800;
+}
+
+.statusPanel {
+  text-align: center;
+}
+
+.statusPanel h2 {
+  margin: 4px 0 14px;
+}
+
+.statusText {
+  color: #4b5870;
+  font-weight: 700;
+}
+
+.card {
+  text-align: center;
+  border: 3px solid #dfe8f3;
+}
+
+.cardCategory {
+  margin: 0;
+  color: #1765b1;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.word {
+  margin: 12px 0 20px;
+  font-size: clamp(2.2rem, 9vw, 4rem);
+  overflow-wrap: anywhere;
+}
+
+.tabooWords p {
+  margin: 8px 0;
+  padding: 10px;
+  border-radius: 10px;
+  background: #fff1f1;
+  color: #b12028;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.actions .danger {
+  grid-column: 1 / -1;
+}
+
+.correct {
+  background: #21853d;
+}
+
+.skip {
+  background: #d87913;
+}
+
+.danger {
+  background: #bd2b35;
+}
+
+.message {
+  min-height: 1.4em;
+  text-align: center;
+  color: #b4232d;
+  font-weight: 800;
+}
+
+@media (max-width: 560px) {
+  .app {
+    padding: 12px;
+  }
+
+  .scoreboard,
+  .actions {
+    grid-template-columns: 1fr;
+  }
+
+  .actions .danger {
+    grid-column: auto;
+  }
 }

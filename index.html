@@ -1,109 +1,98 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tabu Online</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tabu Online 2.1</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
   <main class="app">
     <header class="header">
       <h1>🎲 Tabu Online 💬💬</h1>
-      <p>Gemeinsam online spielen</p>
+      <p>Für 2 bis 4 Spieler</p>
     </header>
 
-    <section id="startScreen" class="box">
+    <section id="startScreen" class="panel">
       <h2>Spiel starten</h2>
 
-      <input id="playerName" type="text" placeholder="Dein Name" />
+      <label for="playerName">Dein Name</label>
+      <input id="playerName" type="text" maxlength="24" placeholder="Name eingeben" autocomplete="name">
 
+      <label for="teamSelect">Dein Team</label>
       <select id="teamSelect">
         <option value="red">🔴 Team Rot</option>
         <option value="blue">🔵 Team Blau</option>
       </select>
 
-      <select id="startCategory">
-        <option value="">Kategorie wählen</option>
-        <option value="Alle">🎲 Alle Kategorien</option>
-        <option value="Alltag">🏠 Alltag</option>
-        <option value="Essen & Trinken">🍔 Essen & Trinken</option>
-        <option value="Tiere">🐶 Tiere</option>
-        <option value="Natur">🌳 Natur</option>
-        <option value="Sport">⚽ Sport</option>
-        <option value="Verkehr">🚗 Verkehr</option>
-        <option value="Technik">💻 Technik</option>
-        <option value="Berufe">👨‍⚕️ Berufe</option>
-        <option value="Städte">🌍 Städte</option>
-        <option value="Schule & Wissen">📚 Schule & Wissen</option>
-        <option value="Backen">🍞 Backen</option>
-        <option value="Einkaufen">🛒 Einkaufen</option>
-        <option value="Büro">🏢 Büro</option>
-      </select>
+      <button id="createGame" class="primary">🎮 Spiel erstellen</button>
 
-      <button id="createGame">🎮 Spiel erstellen</button>
+      <div class="divider"><span>oder</span></div>
 
-      <hr />
+      <label for="joinCode">Spielcode</label>
+      <input id="joinCode" type="text" inputmode="numeric" maxlength="6" placeholder="6-stelligen Code eingeben">
 
-      <input id="joinCode" type="text" placeholder="Spielcode eingeben" />
       <button id="joinGame">🤝 Spiel beitreten</button>
+      <p id="startMessage" class="message" aria-live="polite"></p>
     </section>
 
-    <section id="gameScreen" class="box hidden">
-      <h2>Spielcode: <span id="gameCode">------</span></h2>
-
-      <div class="scoreboard">
-        <div class="team red">
-          <h3>🔴 Team Rot</h3>
-          <div id="redScore" class="score">0</div>
+    <section id="gameScreen" class="hidden">
+      <section class="panel gameHeader">
+        <div>
+          <span class="label">Spielcode</span>
+          <strong id="gameCode">------</strong>
         </div>
-
-        <div class="team blue">
-          <h3>🔵 Team Blau</h3>
-          <div id="blueScore" class="score">0</div>
+        <div>
+          <span class="label">Runde</span>
+          <strong id="roundNumber">1</strong>
         </div>
-      </div>
-
-      <div class="categoryBox">
-        <select id="gameCategory">
-          <option value="Alle">🎲 Alle Kategorien</option>
-          <option value="Alltag">🏠 Alltag</option>
-          <option value="Essen & Trinken">🍔 Essen & Trinken</option>
-          <option value="Tiere">🐶 Tiere</option>
-          <option value="Natur">🌳 Natur</option>
-          <option value="Sport">⚽ Sport</option>
-          <option value="Verkehr">🚗 Verkehr</option>
-          <option value="Technik">💻 Technik</option>
-          <option value="Berufe">👨‍⚕️ Berufe</option>
-          <option value="Städte">🌍 Städte</option>
-          <option value="Schule & Wissen">📚 Schule & Wissen</option>
-          <option value="Backen">🍞 Backen</option>
-          <option value="Einkaufen">🛒 Einkaufen</option>
-          <option value="Büro">🏢 Büro</option>
-        </select>
-
-        <button id="changeCategory">📂 Kategorie wechseln</button>
-      </div>
-
-      <section id="waitingArea" class="card">
-        <h2 id="statusText">Niemand erklärt gerade.</h2>
-        <button id="beExplainer">🎤 Ich bin Erklärer</button>
       </section>
 
-      <section id="cardArea" class="card hidden">
-        <p id="categoryText" class="category">Kategorie</p>
-        <h1 id="wordText">Begriff</h1>
+      <section class="scoreboard">
+        <article class="teamCard redTeam">
+          <h2>🔴 Team Rot</h2>
+          <div id="redScore" class="score">0</div>
+        </article>
+        <article class="teamCard blueTeam">
+          <h2>🔵 Team Blau</h2>
+          <div id="blueScore" class="score">0</div>
+        </article>
+      </section>
+
+      <section class="panel">
+        <h2>👥 Spieler</h2>
+        <div id="playersList" class="playersList"></div>
+      </section>
+
+      <section class="panel statusPanel">
+        <p class="label">Aktueller Erklärer</p>
+        <h2 id="explainerName">Warte auf Spieler …</h2>
+
+        <p class="label">Kategorie</p>
+        <h2 id="categoryName">–</h2>
+
+        <p id="statusText" class="statusText">Mindestens zwei Spieler müssen beitreten.</p>
+      </section>
+
+      <section id="cardArea" class="panel card hidden" aria-live="polite">
+        <p id="cardCategory" class="cardCategory">Kategorie</p>
+        <h2 id="wordText" class="word">Begriff</h2>
 
         <h3>🚫 Nicht sagen</h3>
-        <p id="taboo1"></p>
-        <p id="taboo2"></p>
-        <p id="taboo3"></p>
+        <div class="tabooWords">
+          <p id="taboo1">–</p>
+          <p id="taboo2">–</p>
+          <p id="taboo3">–</p>
+        </div>
 
-        <button id="correct">✅ Richtig</button>
-        <button id="skip">⏭ Weiter</button>
-        <button id="endExplain">🏁 Erklärung beenden</button>
+        <div class="actions">
+          <button id="correct" class="correct">✅ Richtig</button>
+          <button id="skip" class="skip">⏭ Weiter</button>
+          <button id="endRound" class="danger">🏁 Runde beenden</button>
+        </div>
       </section>
+
+      <p id="gameMessage" class="message" aria-live="polite"></p>
     </section>
   </main>
 

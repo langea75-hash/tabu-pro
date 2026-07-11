@@ -2568,5 +2568,5 @@ export const cards = [
   category: "Büro",
     word: "Aktenschrank",
     taboo: ["Ordner", "Unterlagen", "Schrank"]
-  },
+  }
 ];
